@@ -4,9 +4,11 @@
     <info>
         Evidence Analyzer Prop for Cryptology
     </info>
+
     <defines>
         <define>NUMBER_OF_RFID_TAGS 20</define>
     </defines>
+
     <devices>
         <device name="RFID" type="RFID RC522">
             <setting id="ss" value="2"/>
@@ -17,16 +19,26 @@
             <setting id="npixels" value="5"/>
         </device>
     </devices>
+
     <parameters>
+        <parameter name="RFIDToProgram" type="Integer">
+            <setting id="init_value" value="0"/>
+        </parameter>
         <parameter name="SavedRFID" type="String" count="20">
             <setting id="reset" value="0000000000"/>
             <setting id="length" value="10"/>
             <setting id="use_eeprom" value="true"/>
         </parameter>
     </parameters>
+
     <custom_code>
         <file>application.cpp</file>
     </custom_code>
+
+    <logging>
+        <log_module>APPLICATION</log_module>
+    </logging>
+
     <raat protocol="url" buffer_size="64">
     </raat>
 </board>
