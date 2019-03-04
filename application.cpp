@@ -1,5 +1,7 @@
 /* Arduino Includes */
 
+#include <Keyboard.h>
+#include <AStar32U4.h>
 #include <MFRC522.h>
 
 /* RAAT Includes */
@@ -13,7 +15,18 @@
 
 /* Application Includes */
 
+#include "leds.h"
+
 /* Defines, typedefs, constants */
+enum rfid_check_result
+{
+    NO_RFID,
+    RFID_MATCH,
+    RFID_NO_MATCH
+};
+
+static const char CHARACTERS[] = "abcdefghijklmnopqrstuvwxyz";
+static const char NO_MATCH_CHARACTER = 'Z';
 
 /* Private Variables */
 
@@ -72,14 +85,38 @@ void raat_custom_setup(raat_devices_struct& devices, raat_params_struct& params)
         {
             raat_logln(LOG_APP, "No saved RFID %u", i+1);
         }
-    }    
+    }
+
+    leds_setup(devices.pLEDs);
 }
 
 void raat_custom_loop(raat_devices_struct& devices, raat_params_struct& params)
 {
+    bool analyze_button_pressed = devices.pAnalyzeButton->check_low_and_clear();
     for (uint8_t i=0; i<NUMBER_OF_RFID_TAGS; i++)
     {
-        check_rfid(devices.pRFID, params.pSavedRFID[i], i);
+        if (analyze_button_pressed)
+        {
+            switch (check_rfid(devices.pRFID, params.pSavedRFID[i], i))
+            {
+            case RFID_MATCH:
+                Keyboard.press(CHARACTERS[i]);
+                Keyboard.release(CHARACTERS[i]);
+                leds_start_match_animation();
+                break;
+            case RFID_NO_MATCH:
+                Keyboard.press(NO_MATCH_CHARACTER);
+                Keyboard.release(NO_MATCH_CHARACTER);
+                leds_start_no_match_animation();
+                break;
+            case NO_RFID:
+                break;
+            default:
+                break;            
+            }
+        }
         check_program_flag(devices.pRFID, params.pRFIDToProgram, params.pSavedRFID[i], i);
     }
+
+    leds_run(devices.pLEDs);
 }
