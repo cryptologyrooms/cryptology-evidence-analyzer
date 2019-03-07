@@ -34,16 +34,11 @@ static const char NO_MATCH_CHARACTER = 'Z';
 
 static bool check_rfid(RFID_RC522 * pRFID, StringParam * pRFIDParam, uint8_t i)
 {
-    char uuid1[20] = {NULL};
-    char uuid2[20] = {NULL};
-    int len1, len2;
+    char uuid[20] = {NULL};
+    int len1;
 
-    len1 = pRFID->get(uuid1);
-
-    pRFIDParam->get(uuid2);
-    len2 = strlen(uuid2);
-
-    return strncmp(uuid1, uuid2, max(len1, len2)) == 0;
+    len1 = pRFID->get(uuid);
+    return pRFIDParam->strncmp(uuid, len1) == 0;
 }
 
 static void check_program_flag(RFID_RC522 * pRFID, IntegerParam * pRFIDToProgramParam, StringParam * pRFIDStorageParam, uint8_t i)
