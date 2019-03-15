@@ -1,5 +1,7 @@
 /* Arduino Includes */
 
+#include <Keyboard.h>
+#include <AStar32U4.h>
 #include <MFRC522.h>
 
 /* RAAT Includes */
@@ -13,36 +15,39 @@
 
 /* Application Includes */
 
+#include "leds.h"
+
 /* Defines, typedefs, constants */
+enum rfid_check_result
+{
+    NO_RFID,
+    RFID_MATCH,
+    RFID_NO_MATCH
+};
+
+static const char CHARACTERS[] = "abcdefghijklmnopqrstuvwxyz";
+static const char NO_MATCH_CHARACTER = 'Z';
 
 /* Private Variables */
 
 /* Private Functions */
 
-static bool check_rfid(
-    RFID_RC522 * pRFIDDevice,
-    StringParam * pStoredRFIDs[NUMBER_OF_RFID_TAGS],
-    uint8_t i)
+static bool check_rfid(RFID_RC522 * pRFIDDevice, StringParam * pRFIDParam, uint8_t i)
 {
-    char uuid1[20] = {'\0'};
-    char uuid2[20] = {'\0'};
-    int len1, len2;
+    char uuid[20] = {NULL};
+    int len1;
 
-    len1 = pRFIDDevice->get(uuid1);
-
-    pStoredRFIDs[i]->get(uuid2);
-    len2 = strlen(uuid2);
-
-    return strncmp(uuid1, uuid2, max(len1, len2)) == 0;
+    len1 = pRFIDDevice->get(uuid);
+    return pRFIDParam->strncmp(uuid, len1) == 0;
 }
 
 static void check_program_flag(
     RFID_RC522 * pRFIDDevice,
-    StringParam * pStoredRFIDs[NUMBER_OF_RFID_TAGS],
-    IntegerParam * pProgramRFIDParam,
+    StringParam * pStoredRFIDParams[NUMBER_OF_RFID_TAGS],
+    IntegerParam * pRFIDToProgramParam,
     uint8_t i)
 {
-    int32_t to_program = pProgramRFIDParam->get();
+    int32_t to_program = pRFIDToProgramParam->get();
     char uuid[20];
     uint8_t uuid_length = 0;
 
@@ -51,15 +56,16 @@ static void check_program_flag(
         raat_logln(LOG_APP, "Waiting for RFID %d", to_program);
         while(uuid_length == 0)
         {
+
             uuid_length = pRFIDDevice->get(uuid);
             if (uuid_length)
             {
                 raat_logln(LOG_APP, "Saved RFID %lu: <%s>", to_program, uuid);
-                pStoredRFIDs[to_program-1]->set(uuid);
-                pStoredRFIDs[to_program-1]->save();
+                pStoredRFIDParams[i]->set(uuid);
+                pStoredRFIDParams[i]->save();
             }
         }
-        pProgramRFIDParam->set(0);
+        pRFIDToProgramParam->set(0);
     }
 }
 
@@ -80,12 +86,35 @@ void raat_custom_setup(const raat_devices_struct& devices, const raat_params_str
             raat_logln(LOG_APP, "No saved RFID %u", i+1);
         }
     }
+    leds_setup(devices.pLEDs);
 }
 
 void raat_custom_loop(const raat_devices_struct& devices, const raat_params_struct& params)
 {
+    bool analyze_button_pressed = devices.pAnalyzeButton->check_low_and_clear();
     for (uint8_t i=0; i<NUMBER_OF_RFID_TAGS; i++)
     {
-        check_program_flag(devices.pRFID_Device, params.pSavedRFID, params.pProgram_RFID, i);
+        if (analyze_button_pressed)
+        {
+            switch (check_rfid(devices.pRFID_Device, params.pSavedRFID[i], i))
+            {
+            case RFID_MATCH:
+                Keyboard.press(CHARACTERS[i]);
+                Keyboard.release(CHARACTERS[i]);
+                leds_start_match_animation();
+                break;
+            case RFID_NO_MATCH:
+                Keyboard.press(NO_MATCH_CHARACTER);
+                Keyboard.release(NO_MATCH_CHARACTER);
+                leds_start_no_match_animation();
+                break;
+            case NO_RFID:
+                break;
+            default:
+                break;            
+            }
+        }
     }
+
+    leds_run(devices.pLEDs);
 }
