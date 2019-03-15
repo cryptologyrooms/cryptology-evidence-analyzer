@@ -1,32 +1,49 @@
 <?xml version="1.0"?>
 
-<board type="AStar32U4" name="app">
+<board type="Arduino Duemilanove" name="app">
     <info>
         Evidence Analyzer Prop for Cryptology
     </info>
+
     <defines>
         <define>NUMBER_OF_RFID_TAGS 20</define>
     </defines>
+
     <devices>
-        <device name="RFID" type="RFID RC522">
-            <setting id="ss" value="2"/>
-            <setting id="rst" value="3"/>
+        <device name="RFID Device" type="RFID RC522">
+            <setting id="ss" value="10"/>
+            <setting id="rst" value="9"/>
         </device>
         <device name="LEDs" type="Adafruit NeoPixel">
             <setting id="pin" value="5"/>
             <setting id="npixels" value="5"/>
         </device>
     </devices>
+
     <parameters>
+        <parameter name="Program RFID" type="Integer">
+            <setting id="init_value" value="0"/>
+            <setting id="use_eeprom" value="false"/>
+        </parameter>
         <parameter name="SavedRFID" type="String" count="20">
             <setting id="reset" value="0000000000"/>
             <setting id="length" value="10"/>
             <setting id="use_eeprom" value="true"/>
         </parameter>
     </parameters>
+
+    <modules>
+        <module>LED Effect</module>
+    </modules>
+
     <custom_code>
         <file>application.cpp</file>
     </custom_code>
+    
     <raat protocol="url" buffer_size="64">
     </raat>
+    
+    <logging>
+        <log_module>APPLICATION</log_module>
+    </logging>
 </board>
