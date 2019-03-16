@@ -18,32 +18,19 @@
 #include "leds.h"
 
 /* Defines, typedefs, constants */
-enum rfid_check_result
-{
-    NO_RFID,
-    RFID_MATCH,
-    RFID_NO_MATCH
-};
 
 static const char CHARACTERS[] = "abcdefghijklmnopqrstuvwxyz";
 static const char NO_MATCH_CHARACTER = 'Z';
+
+static const uint8_t NO_MATCH_RESULT = 0XFF;
 
 /* Private Variables */
 
 /* Private Functions */
 
-static bool check_rfid(RFID_RC522 * pRFIDDevice, StringParam * pRFIDParam, uint8_t i)
-{
-    char uuid[20] = {NULL};
-    int len1;
-
-    len1 = pRFIDDevice->get(uuid);
-    return pRFIDParam->strncmp(uuid, len1) == 0;
-}
-
 static void check_program_flag(
     RFID_RC522 * pRFIDDevice,
-    StringParam * pStoredRFIDParams[NUMBER_OF_RFID_TAGS],
+    StringParam * pStoredRFIDParam,
     IntegerParam * pRFIDToProgramParam,
     uint8_t i)
 {
@@ -61,8 +48,8 @@ static void check_program_flag(
             if (uuid_length)
             {
                 raat_logln(LOG_APP, "Saved RFID %lu: <%s>", to_program, uuid);
-                pStoredRFIDParams[i]->set(uuid);
-                pStoredRFIDParams[i]->save();
+                pStoredRFIDParam->set(uuid);
+                pStoredRFIDParam->save();
             }
         }
         pRFIDToProgramParam->set(0);
@@ -92,28 +79,48 @@ void raat_custom_setup(const raat_devices_struct& devices, const raat_params_str
 void raat_custom_loop(const raat_devices_struct& devices, const raat_params_struct& params)
 {
     bool analyze_button_pressed = devices.pAnalyzeButton->check_low_and_clear();
-    for (uint8_t i=0; i<NUMBER_OF_RFID_TAGS; i++)
+
+    if (analyze_button_pressed)
     {
-        if (analyze_button_pressed)
+        char uuid[20];
+        uint8_t uuid_length = devices.pRFID_Device->get(uuid);
+        uint8_t match = NO_MATCH_RESULT;
+        if (uuid_length)
         {
-            switch (check_rfid(devices.pRFID_Device, params.pSavedRFID[i], i))
+            raat_logln(LOG_APP, "Scanning RFIDs for <%s>", uuid);
+
+            for (uint8_t i=0; i<NUMBER_OF_RFID_TAGS; i++)
             {
-            case RFID_MATCH:
-                Keyboard.press(CHARACTERS[i]);
-                Keyboard.release(CHARACTERS[i]);
+                if (params.pSavedRFID[i]->strncmp(uuid, uuid_length) == 0)
+                {
+                    match = (int8_t)i;
+                }
+            }
+
+            if (match != NO_MATCH_RESULT)
+            {
+                raat_logln(LOG_APP, "Matched RFID #%d (%c)", match+1, CHARACTERS[match]);
+                Keyboard.press(CHARACTERS[match]);
+                Keyboard.release(CHARACTERS[match]);
                 leds_start_match_animation();
-                break;
-            case RFID_NO_MATCH:
+            }
+            else
+            {
+                raat_logln(LOG_APP, "No match!");
                 Keyboard.press(NO_MATCH_CHARACTER);
                 Keyboard.release(NO_MATCH_CHARACTER);
                 leds_start_no_match_animation();
-                break;
-            case NO_RFID:
-                break;
-            default:
-                break;            
             }
         }
+        else
+        {
+            raat_logln(LOG_APP, "No card found");
+        }
+    }
+
+    for (uint8_t i=0; i<NUMBER_OF_RFID_TAGS; i++)
+    {
+        check_program_flag(devices.pRFID_Device, params.pSavedRFID[i], params.pRFIDToProgram, i);
     }
 
     leds_run(devices.pLEDs);

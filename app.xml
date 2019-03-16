@@ -11,29 +11,34 @@
 
     <devices>
         <device name="RFID Device" type="RFID RC522">
-            <setting id="ss" value="10"/>
-            <setting id="rst" value="9"/>
+            <setting id="ss" value="2"/>
+            <setting id="rst" value="3"/>
         </device>
         <device name="LEDs" type="Adafruit NeoPixel">
-            <setting id="pin" value="5"/>
+            <setting id="pin" value="A1"/>
             <setting id="npixels" value="5"/>
         </device>
         <device name="AnalyzeButton" type="Debounced Input">
-            <setting id="pin" value="6"/>
+            <setting id="pin" value="12"/>
             <setting id="debounce_time" value="50"/>
             <setting id="pullup" value="true"/>
+        </device>
+        <device name="Heartbeat" type="Timed OnOff">
+            <setting id="pin" value="13"/>
+            <setting id="ontime" value="500"/>
+            <setting id="offtime" value="500"/>
         </device>
     </devices>
 
     <parameters>
+        <parameter name="SavedRFID" type="String" count="20">
+            <setting id="reset_value" value="XXXXXXXXXX"/>
+            <setting id="length" value="10"/>
+            <setting id="use_eeprom" value="true"/>
+        </parameter>
         <parameter name="RFIDToProgram" type="Integer">
             <setting id="init_value" value="0"/>
             <setting id="use_eeprom" value="false"/>
-        </parameter>
-        <parameter name="SavedRFID" type="String" count="20">
-            <setting id="reset" value="0000000000"/>
-            <setting id="length" value="10"/>
-            <setting id="use_eeprom" value="true"/>
         </parameter>
     </parameters>
 
