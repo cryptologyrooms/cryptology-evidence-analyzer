@@ -3,8 +3,9 @@
 
 void leds_setup(AdafruitNeoPixelRAAT * pNeoPixels);
 void leds_run(AdafruitNeoPixelRAAT * pNeoPixels);
+void leds_test(AdafruitNeoPixelRAAT * pNeoPixels);
 
-void leds_start_match_animation();
-void leds_start_no_match_animation();
+void leds_pend_scan_animation();
+void leds_pend_no_match_animation();
 
 #endif

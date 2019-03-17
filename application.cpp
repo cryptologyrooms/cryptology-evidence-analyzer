@@ -56,28 +56,45 @@ static void check_program_flag(
     }
 }
 
+static void try_eeprom_logging(const raat_params_struct& params)
+{
+    static bool s_bLogged  = false;
+
+    if (!s_bLogged)
+    {
+        if (Serial)
+        {
+            char uuid[20];
+            for (uint8_t i=0; i<NUMBER_OF_RFID_TAGS; i++)
+            {
+                params.pSavedRFID[i]->get(uuid);
+                if (strlen(uuid))
+                {
+                    raat_logln(LOG_APP, "Saved RFID %u: <%s>", i+1, uuid);
+                }
+                else
+                {
+                    raat_logln(LOG_APP, "No saved RFID %u", i+1);
+                }
+            }
+            s_bLogged = true;
+        }
+    }
+}
+
 /* RAAT Functions */
 
 void raat_custom_setup(const raat_devices_struct& devices, const raat_params_struct& params)
 {
-    char uuid[20];
-    for (uint8_t i=0; i<NUMBER_OF_RFID_TAGS; i++)
-    {
-        params.pSavedRFID[i]->get(uuid);
-        if (strlen(uuid))
-        {
-            raat_logln(LOG_APP, "Saved RFID %u: <%s>", i+1, uuid);
-        }
-        else
-        {
-            raat_logln(LOG_APP, "No saved RFID %u", i+1);
-        }
-    }
+    (void)params;
     leds_setup(devices.pLEDs);
+    leds_test(devices.pLEDs);
 }
 
 void raat_custom_loop(const raat_devices_struct& devices, const raat_params_struct& params)
 {
+    try_eeprom_logging(params);
+
     bool analyze_button_pressed = devices.pAnalyzeButton->check_low_and_clear();
 
     if (analyze_button_pressed)
@@ -87,6 +104,8 @@ void raat_custom_loop(const raat_devices_struct& devices, const raat_params_stru
         uint8_t match = NO_MATCH_RESULT;
         if (uuid_length)
         {
+            leds_pend_scan_animation();
+
             raat_logln(LOG_APP, "Scanning RFIDs for <%s>", uuid);
 
             for (uint8_t i=0; i<NUMBER_OF_RFID_TAGS; i++)
@@ -102,14 +121,13 @@ void raat_custom_loop(const raat_devices_struct& devices, const raat_params_stru
                 raat_logln(LOG_APP, "Matched RFID #%d (%c)", match+1, CHARACTERS[match]);
                 Keyboard.press(CHARACTERS[match]);
                 Keyboard.release(CHARACTERS[match]);
-                leds_start_match_animation();
             }
             else
             {
                 raat_logln(LOG_APP, "No match!");
                 Keyboard.press(NO_MATCH_CHARACTER);
                 Keyboard.release(NO_MATCH_CHARACTER);
-                leds_start_no_match_animation();
+                leds_pend_no_match_animation();
             }
         }
         else

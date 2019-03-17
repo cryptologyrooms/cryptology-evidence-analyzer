@@ -7,6 +7,7 @@
 
     <defines>
         <define>NUMBER_OF_RFID_TAGS 20</define>
+        <define>NUMBER_OF_LEDS 26</define>
     </defines>
 
     <devices>
@@ -16,7 +17,7 @@
         </device>
         <device name="LEDs" type="Adafruit NeoPixel">
             <setting id="pin" value="A1"/>
-            <setting id="npixels" value="5"/>
+            <setting id="npixels" value="26"/>
         </device>
         <device name="AnalyzeButton" type="Debounced Input">
             <setting id="pin" value="12"/>
@@ -44,6 +45,7 @@
 
     <modules>
         <module>LED Effect</module>
+        <module>Oneshot Timer</module>
     </modules>
 
     <custom_code>
