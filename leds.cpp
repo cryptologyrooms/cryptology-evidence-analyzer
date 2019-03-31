@@ -78,14 +78,16 @@ void leds_setup(AdafruitNeoPixelRAAT * pNeoPixels)
     s_scan_timer.start();
 }
 
-void leds_run(AdafruitNeoPixelRAAT * pNeoPixels)
+bool leds_run(AdafruitNeoPixelRAAT * pNeoPixels, RGBParam * pScanColour, uint8_t nscans, uint32_t scantime)
 {
     if (!bRunning)
     {
         if (bScanPending)
         {
             bScanPending = false;
-            s_larson.start(SCAN_COLOURS, 3);
+            s_scan_timer.start(scantime / (nscans * NUMBER_OF_LEDS));
+            s_larson.start(pScanColour->get(eR), pScanColour->get(eG), pScanColour->get(eB), nscans);
+            //s_larson.start(SCAN_COLOURS, 3);
             bRunning = true;
             copy_actual_values_to_leds_and_show(pNeoPixels);
         }
@@ -104,6 +106,7 @@ void leds_run(AdafruitNeoPixelRAAT * pNeoPixels)
         bRunning = s_larson.update();
         copy_actual_values_to_leds_and_show(pNeoPixels);
     }
+    return bRunning;
 }
 
 void leds_test(AdafruitNeoPixelRAAT * pNeoPixels)

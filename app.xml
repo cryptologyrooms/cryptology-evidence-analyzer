@@ -41,6 +41,26 @@
             <setting id="init_value" value="0"/>
             <setting id="use_eeprom" value="false"/>
         </parameter>
+        <parameter name="ScanTime" type="Integer">
+            <setting id="init_value" value="2500"/>
+            <setting id="min" value="1000"/>
+            <setting id="max" value="10000"/>
+            <setting id="use_eeprom" value="true"/>
+        </parameter>
+        <parameter name="ScanNumber" type="Integer">
+            <setting id="init_value" value="3"/>
+            <setting id="min" value="1"/>
+            <setting id="max" value="100"/>
+            <setting id="use_eeprom" value="true"/>
+        </parameter>
+        <parameter name="ScanColour" type="RGB">
+            <setting id="limit" value="255"/>
+            <setting id="clip" value="true"/>
+            <setting id="r_default" value="128"/>
+            <setting id="g_default" value="64"/>
+            <setting id="b_default" value="128"/>
+            <setting id="use_eeprom" value="true"/>
+        </parameter>
     </parameters>
 
     <modules>
@@ -58,7 +78,7 @@
         <log_module>APPLICATION</log_module>
     </logging>
 
-    <raat protocol="url" buffer_size="64">
+    <raat protocol="url" buffer_size="32">
     </raat>
     
 </board>
